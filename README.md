@@ -13,14 +13,14 @@ This repository contains scripts that are useful for GIS applications.
     │   │   ├── Template
     │   │   │   ├── LYR
     │   │   │   └── MXD
-    │   │   └── arcmap_basic_plot.py
+    │   │   └── basic_plot.py
     │   ├── ArcPro_Python
     │   │   ├── Input
     │   │   ├── Output
     │   │   ├── Template
     │   │   │   ├── APRX
     │   │   │   └── LYRX
-    │   │   └── arcpro_basic_plot.py
+    │   │   └── basic_plot.py
     │   └── ArcMap_Toolbox
     │       └── water_depth_correction.py
     ├── Satellite
