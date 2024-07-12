@@ -109,7 +109,7 @@ This repository is an attempt to adapt the MicaSense python scripts for DJI P4 M
     └── UAV
         └── DJI_P4M
             ├── helper                       
-            │    └── metadata.py             
+            │    └── metadata.py             <--- read metadata of images
             ├── 1_DjiP4M_Correction.ipynb    <--- correct for phase difference, vignette, distortion, sunlight
             ├── 2_DjiP4M_Stacking.ipynb      <--- align and stack corrected bands
             └── conda_env.yml                <--- conda environment requirements
