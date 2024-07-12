@@ -50,7 +50,7 @@ if os.path.exists(os.path.join(out_mxd, temp_name)):
     shutil.rmtree(os.path.join(out_mxd, temp_name), ignore_errors=True)
 
 
-########## ---------- FUNCTIONS ---------- #################### ---------- SYS CHECK ---------- ##########
+########## ---------- FUNCTIONS ---------- ##########
 def plot_tif(tif_path, tif_sym_path, plot_df):
     fname = tif_path.split("\\")[-1].split(".tif")[0]
     arcpy.MakeRasterLayer_management(tif_path, fname)
@@ -86,51 +86,71 @@ try:
     StartTime = time.time()
 
     try:
+        
+        # Loop through each feature in shapefile (zoom to each feature later)
+        shp_cursor = arcpy.SearchCursor(in_shp)
+        for i in shp_cursor:
+            shp_id = i.getValue("Label")  # Shapefile should contain a column titled "Label"
 
-        # Output files
-        out_mxd_file = os.path.join(out_mxd, out_filename + ".mxd")
-        out_png_file = os.path.join(out_png, out_filename + ".png")
-        if os.path.exists(out_mxd_file) or os.path.exists(out_png_file):
-            print("Output MXD and/or PNG already exists.")
-            print("Please delete them or set overwrite to True and run the script again.")
-            sys.exit(0)
+            # Output files
+            out_mxd_file = os.path.join(out_mxd, out_filename + ".mxd")
+            out_png_file = os.path.join(out_png, out_filename + ".png")
+            if os.path.exists(out_mxd_file) or os.path.exists(out_png_file):
+                print("Output MXD and/or PNG already exists.")
+                print("Please delete them or set overwrite to True and run the script again.")
+                sys.exit(0)
 
-        # Create map
-        else:
-            print("Creating map: " + out_filename)
-            mxd1.saveACopy(out_mxd_file)
-            mxd = arcpy.mapping.MapDocumnet(out_mxd_file)
-            main_df = arcpy.mapping.ListDataFrames(mxd, "Layers")[0]  # Main map in template mxd should be named "Layers"
-            mini_df = arcpy.mapping.ListDataFrames(mxd, "MiniMap")[0]  # Mini map in template mxd should be named "MiniMap"
+            # Create map
+            else:
+                print("Creating map: " + out_filename)
+                mxd1.saveACopy(out_mxd_file)
+                mxd = arcpy.mapping.MapDocumnet(out_mxd_file)
+                main_df = arcpy.mapping.ListDataFrames(mxd, "Layers")[0]  # Main map in template mxd should be named "Layers"
+                mini_df = arcpy.mapping.ListDataFrames(mxd, "MiniMap")[0]  # Mini map in template mxd should be named "MiniMap"
 
-            # Plot
-            tif_fname = plot_tif(in_tif, sym_tif, main_df)  # Plot raster in main map
-            shp_fname = plot_shp(in_shp, sym_shp, mini_df)  # Plot shapefile in mini map
+                # Plot
+                tif_fname = plot_tif(in_tif, sym_tif, main_df)  # Plot raster in main map
+                shp_fname = plot_shp(in_shp, sym_shp, mini_df)  # Plot shapefile in mini map
 
-            # Set transparency
-            lyr_tif = arcpy.mapping.ListLayers(mxd, tif_fname, main_df)[0]
-            lyr_tif.transparency = 50
+                # Set transparency
+                lyr_tif = arcpy.mapping.ListLayers(mxd, tif_fname, main_df)[0]
+                lyr_tif.transparency = 50
 
-            # Turn on labels
-            lyr_shp = arcpy.mapping.ListLayers(mxd, shp_fname, mini_df)[0]
-            lyr_shp.showLabels = True
-            lyr_shp_labelclass = lyr_shp.labelClasses[0]
-            lyr_shp_labelclass.expression = '"{}" + "{}" + {Label} + "{}"+ "{}"'.format(
-                "<FNT size = '16'>",
-                "CLR red = '255' green = '0' blue = '0'>",
-                "</CLR>",
-                "</FNT>"
-            )
+                # Turn on labels
+                lyr_shp = arcpy.mapping.ListLayers(mxd, shp_fname, mini_df)[0]
+                lyr_shp.showLabels = True
+                lyr_shp_labelclass = lyr_shp.labelClasses[0]
+                lyr_shp_labelclass.expression = '"{}" + "{}" + {Label} + "{}"+ "{}"'.format(
+                    "<FNT size = '16'>",
+                    "CLR red = '255' green = '0' blue = '0'>",
+                    "</CLR>",
+                    "</FNT>"
+                )
 
-            # Update text
-            for elm in arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT"):
-                if elm.text == "map_title":  # Template mxd should contain a text box with the text: map_title
-                    elm.text = "INSERT MAP TITLE HERE"
+                # Update text
+                for elm in arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT"):
+                    if elm.text == "map_title":  # Template mxd should contain a text box with the text: map_title
+                        elm.text = "INSERT MAP TITLE HERE"
 
-            # Export
-            print("Exporting...")
-            mxd.save()
-            arcpy.mapping.ExportToPNG(mxd, out_png_file)
+                # Zoom main map to each feature
+                with arcpy.da.SearchCursor(lyr_shp, "SHAPE@", where_clause="Label='{}'".format(shp_id)) as lyr_shp_cursor:
+                    for fc in lyr_shp_cursor:
+                        fc_extent = fc[0].extent
+                main_df.extent = fc_extent
+                main_df.extent = arcpy.Extent(
+                    main_df.extent.XMin-0.005,
+                    main_df.extent.YMin-0.01,
+                    main_df.extent.XMax+0.005,
+                    main_df.extent.YMax+0.01,
+                    )
+                
+                # Custom extent for mini map
+                mini_df.extent = arcpy.Extent(103.62, 1.31, 103.72, 1.45)  #XMin, YMin, XMax, YMax
+
+                # Export
+                print("Exporting...")
+                mxd.save()
+                arcpy.mapping.ExportToPNG(mxd, out_png_file)
 
     except:
         print("Processing error...")

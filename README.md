@@ -45,6 +45,7 @@ This folder contains python script for ArcMap 10.7.1 & Python 2.7
 * Set layer transparency
 * Turn on and format labels
 * Edit texts in template mxd file
+* Zoom in to each feature in shapefile
 
 ### ArcPro_Python
 This folder contains python script for ArcGIS Pro 3.1 & Python 3.9
