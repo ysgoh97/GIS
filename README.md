@@ -1,4 +1,4 @@
-# GIS
+# GIS & Remote Sensing
  
 ## Introduction
 This repository contains scripts that are useful for GIS and Remote Sensing (Satellite and UAV image processing) applications.
