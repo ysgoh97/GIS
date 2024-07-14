@@ -1,7 +1,7 @@
 # GIS
  
 ## Introduction
-This repository contains scripts that are useful for GIS applications.
+This repository contains scripts that are useful for GIS and Remote Sensing (Satellite and UAV image processing) applications.
 
 ## Code & File Structure
 ```
